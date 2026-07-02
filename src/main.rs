@@ -71,13 +71,49 @@ pub static PICOTOOL_ENTRIES: [embassy_rp::binary_info::EntryAddr; 4] = [
     embassy_rp::binary_info::rp_program_build_attribute!(),
 ];
 
+struct FlashLedStruct {
+    led: Output<'static>,
+    delay: u32,
+}
+
+impl FlashLedStruct {
+    fn new(led: Output<'static>, delay: u32) -> Self {
+        Self { led, delay }
+    }
+
+    fn flash(&mut self) {
+        self.led.set_high();
+        delay(self.delay);
+        self.led.set_low();
+        delay(self.delay);
+    }
+}
+
+struct DisplayStruct <'a>{
+    display: ST7565<SPIInterface<embassy_embedded_hal::shared_bus::blocking::spi::SpiDeviceWithConfig<'a, NoopRawMutex, embassy_rp::spi::Spi<'a, SPI0, embassy_rp::spi::Blocking>, Output<'a>>, Output<'a>>, DOGL128_6, GraphicsMode<'a, 128, 8>, 128, 64, 8>,
+}
+
+impl <'a> DisplayStruct <'a>{
+    pub fn new(display: ST7565<SPIInterface<embassy_embedded_hal::shared_bus::blocking::spi::SpiDeviceWithConfig<'a, NoopRawMutex, embassy_rp::spi::Spi<'a, SPI0, embassy_rp::spi::Blocking>, Output<'a>>, Output<'a>>, DOGL128_6, GraphicsMode<'a, 128, 8>, 128, 64, 8>) -> Self {
+        Self { display
+        
+        }
+    }
+}
+
+
+
 #[embassy_executor::main]
-async fn main(_spawner: Spawner) {
+async fn main (_spawner: Spawner) {
     let p = embassy_rp::init(Default::default());
 
     info!("Started");
 
-    let mut pico_led = Output::new(p.PIN_25, Level::High);
+
+    let pico_led = Output::new(p.PIN_25, Level::High);
+    let mut flash_led = FlashLedStruct::new(pico_led, 10_000_000);
+    flash_led.flash();
+
 
     let mosi = p.PIN_19;
     let miso  = p.PIN_20;
@@ -98,33 +134,45 @@ async fn main(_spawner: Spawner) {
        info!("display interface created");
 
     let mut page_buffer = GraphicsPageBuffer::new();
-    let mut display: ST7565<SPIInterface<embassy_embedded_hal::shared_bus::blocking::spi::SpiDeviceWithConfig<'_, NoopRawMutex, embassy_rp::spi::Spi<'_, SPI0, embassy_rp::spi::Blocking>, Output<'_>>, Output<'_>>, DOGL128_6, GraphicsMode<'_, 128, 8>, 128, 64, 8> = st7565::ST7565::new(display_interface, DOGL128_6)
+    let display: ST7565<SPIInterface<embassy_embedded_hal::shared_bus::blocking::spi::SpiDeviceWithConfig<'_, NoopRawMutex, embassy_rp::spi::Spi<'_, SPI0, embassy_rp::spi::Blocking>, Output<'_>>, Output<'_>>, DOGL128_6, GraphicsMode<'_, 128, 8>, 128, 64, 8> = st7565::ST7565::new(display_interface, DOGL128_6)
         .into_graphics_mode(&mut page_buffer);   
 
-    display.reset(&mut reset, &mut Delay).unwrap();
-    let _ = display.flush();
-    display.set_display_on(true).unwrap();
-    let font = MonoTextStyle::new(&FONT_10X20, BinaryColor::On);
+    let display: DisplayStruct = DisplayStruct::new(display);
 
-    let mut i =0; 
+
+    // display.reset(&mut reset, &mut Delay).unwrap();
+    // let _ = display.flush();
+    // display.set_display_on(true).unwrap();
+    // let font = MonoTextStyle::new(&FONT_10X20, BinaryColor::On);
+
+    // let mut i =0; 
         
-    let mut num = 1 as u8;
+    // let mut num = 0 as u8;
+    // loop{
+    //     let _ = display.flush();
+    //     flash_led.flash();
+
+
+    //     num += 1;
+
+    //     let num_str: String<20> =  format!("{}", num).unwrap();//Format!("{}".num);
+    //     let _ =Text::new(&num_str, Point::new(0, 13), font)
+    //             .draw(&mut display);
+    //     let _ =Text::new("123.4567", Point::new(0, 29), font)
+    //             .draw(&mut display);
+    //     let _ =Text::new("34.5678", Point::new(3, 45), font)
+    //             .draw(&mut display);
+    //     let _ =Text::new("88.8888", Point::new(3, 61), font)
+    //             .draw(&mut display);
+
+    //     info!("before flush");
+    //     display.flush().unwrap();       // Flushes internal buffer to the display
+    //     delay(100_000_000);
+    //     info!("looping");
+
+    // }
+
     loop{
-
-        let num_str: String<20> =  format!("{}", num).unwrap();//Format!("{}".num);
-        num += 1;
-        let _ =Text::new(&num_str, Point::new(0, 13), font)
-                .draw(&mut display);
-        let _ =Text::new("123.4567", Point::new(0, 29), font)
-                .draw(&mut display);
-        let _ =Text::new("34.5678", Point::new(3, 45), font)
-                .draw(&mut display);
-        let _ =Text::new("88.8888", Point::new(3, 61), font)
-                .draw(&mut display);
-
-        display.flush().unwrap();
-        delay(100_000_000);
-        info!("looping");
 
     }
 
