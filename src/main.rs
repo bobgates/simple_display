@@ -8,9 +8,15 @@ use core::cell::RefCell;
 // use nostd::format;
 
 use cortex_m::asm::delay;
-use defmt::*;
+// use defmt::*;
+// use defmt::{Format};
+
+use {defmt_rtt as _, panic_probe as _};
+
 use defmt::info; //unnecessary?
 
+mod display;
+use display::DisplayStruct;
 use display_interface_spi::SPIInterface;
 
 use embassy_embedded_hal::shared_bus::blocking::spi::SpiDeviceWithConfig;
@@ -30,12 +36,6 @@ use embassy_sync::blocking_mutex::raw::NoopRawMutex;
 // use embassy_time::{Duration, Timer};
 
 //, text};
-// use embedded_graphics::primitives::{Circle, PrimitiveStyle, Rectangle};
-use embedded_graphics::mono_font::ascii::{FONT_7X13, FONT_10X20, FONT_9X18, FONT_9X18_BOLD};
-use embedded_graphics::mono_font::MonoTextStyle;
-use embedded_graphics::pixelcolor::BinaryColor;
-use embedded_graphics::{prelude::*};
-// use embedded_graphics::text::Text;
 
 // use embedded_hal::spi::SpiDevice;
 // use embedded_hal::digital::{InputPin, OutputPin};
@@ -43,15 +43,20 @@ use embedded_graphics::{prelude::*};
 use embassy_executor::Spawner;
 // use embassy_rp::gpio;
 
-// use heapless::{format, String};
+use embedded_graphics::mono_font::ascii::{FONT_7X13, FONT_10X20, FONT_9X18, FONT_9X18_BOLD};
+use embedded_graphics::mono_font::MonoTextStyle;
+use embedded_graphics::pixelcolor::BinaryColor;
+
+
 
 use st7565::{GraphicsPageBuffer};
 use st7565::displays::DOGL128_6;
 use st7565::ST7565;
 use st7565::modes::GraphicsMode;
 
-mod display;
-use display::DisplayStruct;
+mod stack;
+
+
 
 // use defmt::{Format};
 use {defmt_rtt as _, panic_probe as _};
@@ -87,29 +92,6 @@ impl FlashLedStruct {
     }
 }
 
-
-// struct DisplayStruct <'a>{
-//     pub display: ST7565<SPIInterface<embassy_embedded_hal::shared_bus::blocking::spi::SpiDeviceWithConfig<'a, NoopRawMutex, embassy_rp::spi::Spi<'a, SPI0, embassy_rp::spi::Blocking>, Output<'a>>, Output<'a>>, DOGL128_6, GraphicsMode<'a, 128, 8>, 128, 64, 8>,
-//     reset_pin: Output<'a>,
-//     font: MonoTextStyle<'a, BinaryColor>,
-// }
-
-// impl <'a> DisplayStruct <'a>{
-//     pub fn new(display: ST7565<SPIInterface<embassy_embedded_hal::shared_bus::blocking::spi::SpiDeviceWithConfig<'a, NoopRawMutex, embassy_rp::spi::Spi<'a, SPI0, embassy_rp::spi::Blocking>, Output<'a>>, Output<'a>>, DOGL128_6, GraphicsMode<'a, 128, 8>, 128, 64, 8>,
-//                 reset_pin: Output<'a>, font: MonoTextStyle<'a, BinaryColor>) -> Self {
-
-//         Self { 
-//             display, 
-//             reset_pin,
-//             font,
-//         }
-//     }
-
-//     pub fn set_on(&mut self, on: bool) {
-//         self.display.set_display_on(on).unwrap();
-
-//     }
-// }
 
 #[embassy_executor::main]
 async fn main (_spawner: Spawner) {
@@ -149,42 +131,24 @@ async fn main (_spawner: Spawner) {
     let mut display: DisplayStruct = DisplayStruct::new(display, reset_pin, font);
 
     display.set_on(true);
-
+    let mut stack = stack::Stack::new();
 
     // display.display.reset(&mut reset, &mut Delay).unwrap();
     let _ = display.display.flush();
     display.set_on(true);
-    // display.set_display_on(true).unwrap();
-    let font = MonoTextStyle::new(&FONT_10X20, BinaryColor::On);
 
-    // let mut i =0; 
-        
-    // let mut num = 0 as u8;
-    // loop{
-    //     let _ = display.flush();
-    //     flash_led.flash();
-
-
-    //     num += 1;
+    display.update_stack(&stack);
 
     //     let num_str: String<20> =  format!("{}", num).unwrap();//Format!("{}".num);
     //     let _ =Text::new(&num_str, Point::new(0, 13), font)
     //             .draw(&mut display);
-    //     let _ =Text::new("123.4567", Point::new(0, 29), font)
-    //             .draw(&mut display);
-    //     let _ =Text::new("34.5678", Point::new(3, 45), font)
-    //             .draw(&mut display);
-    //     let _ =Text::new("88.8888", Point::new(3, 61), font)
-    //             .draw(&mut display);
-
-    //     info!("before flush");
-    //     display.flush().unwrap();       // Flushes internal buffer to the display
-    //     delay(100_000_000);
-    //     info!("looping");
-
-    // }
-
+ 
     loop{
+        // info!("In loop");
+        display.update_stack(&stack);
+        stack.swapxy();
+        stack.set_changed();
+        delay(1_000_000);
 
     }
 

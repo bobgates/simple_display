@@ -1,6 +1,6 @@
 
 use cortex_m::asm::delay;
-
+use defmt::info;
 use display_interface_spi::SPIInterface;
 
 use embassy_time::Delay;
@@ -26,11 +26,13 @@ use embassy_rp::peripherals::{SPI0};
 
 use embassy_sync::blocking_mutex::raw::NoopRawMutex;
 
+use crate::stack;
 
 pub struct DisplayStruct <'a>{
     pub display: ST7565<SPIInterface<embassy_embedded_hal::shared_bus::blocking::spi::SpiDeviceWithConfig<'a, NoopRawMutex, embassy_rp::spi::Spi<'a, SPI0, embassy_rp::spi::Blocking>, Output<'a>>, Output<'a>>, DOGL128_6, GraphicsMode<'a, 128, 8>, 128, 64, 8>,
     reset_pin: Output<'a>,
     font: MonoTextStyle<'a, BinaryColor>,
+    stack: stack::Stack,
 }
 
 impl <'a> DisplayStruct <'a>{
@@ -39,10 +41,14 @@ impl <'a> DisplayStruct <'a>{
         
         display.reset(&mut reset_pin, &mut Delay).unwrap();
 
+        let stack = stack::Stack::new();
+
+
         Self { 
             display, 
             reset_pin,
             font,
+            stack,
         }
     }
 
@@ -59,4 +65,41 @@ impl <'a> DisplayStruct <'a>{
         let _ =Text::new(&num_str, Point::new(0, 13), self.font).draw(&mut self.display);
 
     }
+    pub fn update_stack(&mut self, stack: &stack::Stack) {
+        self.display.clear(BinaryColor::Off);
+
+        let (mut x, mut y, mut z, mut t) = self.stack.fetch_values();
+        let num_str: String<20> =  format!("{}", x).unwrap();//Format!("{}".num);
+        let _ =Text::new(&num_str, Point::new(0, 13), self.font).draw(&mut self.display);
+        let num_str: String<20> =  format!("{}", y).unwrap();//Format!("{}".num);
+        let _ =Text::new(&num_str, Point::new(0, 29), self.font).draw(&mut self.display);
+        let num_str: String<20> =  format!("{}", z).unwrap();//Format!("{}".num);
+        let _ =Text::new(&num_str, Point::new(3, 45), self.font).draw(&mut self.display);
+        let num_str: String<20> =  format!("{}", t).unwrap();//Format!("{}".num);
+        let _ =Text::new(&num_str, Point::new(3, 61), self.font).draw(&mut self.display);
+
+        // info!("before flush");
+        self.display.flush().unwrap();       // Flushes internal buffer to the display
+
+        self.stack.test_increment();
+
+
+
+
+        // delay(1_000);
+        // info!("looping");
+    }
+    //     let num_str: String<20> =  format!("{}", num).unwrap();//Format!("{}".num);
+    //     let _ =Text::new(&num_str, Point::new(0, 13), self.font).draw(&mut self.display);
+    //     let _ =Text::new("123.4567", Point::new(0, 29), self.font).draw(&mut self.display);
+    //     let _ =Text::new("34.5678", Point::new(3, 45), self.font).draw(&mut self.display);
+    //     let _ =Text::new("88.8888", Point::new(3, 61), self.font).draw(&mut self.display);
+
+    //     info!("before flush");
+    //     self.display.flush().unwrap();       // Flushes internal buffer to the display
+    //     delay(100_000_000);
+    //     info!("looping");
+    // }
+
+
 }
