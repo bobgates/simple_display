@@ -1,7 +1,3 @@
-//! This example test the RP Pico on board LED.
-//!
-//! It does not work with the RP Pico W board. See `blinky_wifi.rs`.
-
 #![no_std]
 #![no_main]
 
@@ -18,20 +14,20 @@ use defmt::info; //unnecessary?
 use display_interface_spi::SPIInterface;
 
 use embassy_embedded_hal::shared_bus::blocking::spi::SpiDeviceWithConfig;
-use embassy_embedded_hal::shared_bus::SpiDeviceError;
+// use embassy_embedded_hal::shared_bus::SpiDeviceError;
 
-use embassy_rp::gpio::Output;
-use embassy_rp::gpio::{Input, Level, Pull};
+use embassy_rp::gpio::{Level, Output};
+// use embassy_rp::gpio::{Input, Level, Pull};
 use embassy_rp::peripherals::{SPI0};
-use embassy_rp::{Peri, PeripheralType};
+// use embassy_rp::{Peri, PeripheralType};
 use embassy_rp::spi;
 use embassy_rp::spi::{Blocking, ClkPin, Config, MisoPin, MosiPin, Spi};
 
 
 use embassy_sync::blocking_mutex::Mutex;
 use embassy_sync::blocking_mutex::raw::NoopRawMutex;
-use embassy_time::Delay;
-use embassy_time::{Duration, Timer};
+// use embassy_time::Delay;
+// use embassy_time::{Duration, Timer};
 
 //, text};
 // use embedded_graphics::primitives::{Circle, PrimitiveStyle, Rectangle};
@@ -39,21 +35,23 @@ use embedded_graphics::mono_font::ascii::{FONT_7X13, FONT_10X20, FONT_9X18, FONT
 use embedded_graphics::mono_font::MonoTextStyle;
 use embedded_graphics::pixelcolor::BinaryColor;
 use embedded_graphics::{prelude::*};
-use embedded_graphics::text::Text;
+// use embedded_graphics::text::Text;
 
-use embedded_hal::spi::SpiDevice;
-use embedded_hal::digital::{InputPin, OutputPin};
-
+// use embedded_hal::spi::SpiDevice;
+// use embedded_hal::digital::{InputPin, OutputPin};
 
 use embassy_executor::Spawner;
-use embassy_rp::gpio;
+// use embassy_rp::gpio;
 
-use heapless::{format, String};
+// use heapless::{format, String};
 
 use st7565::{GraphicsPageBuffer};
 use st7565::displays::DOGL128_6;
 use st7565::ST7565;
 use st7565::modes::GraphicsMode;
+
+mod display;
+use display::DisplayStruct;
 
 // use defmt::{Format};
 use {defmt_rtt as _, panic_probe as _};
@@ -89,19 +87,29 @@ impl FlashLedStruct {
     }
 }
 
-struct DisplayStruct <'a>{
-    display: ST7565<SPIInterface<embassy_embedded_hal::shared_bus::blocking::spi::SpiDeviceWithConfig<'a, NoopRawMutex, embassy_rp::spi::Spi<'a, SPI0, embassy_rp::spi::Blocking>, Output<'a>>, Output<'a>>, DOGL128_6, GraphicsMode<'a, 128, 8>, 128, 64, 8>,
-}
 
-impl <'a> DisplayStruct <'a>{
-    pub fn new(display: ST7565<SPIInterface<embassy_embedded_hal::shared_bus::blocking::spi::SpiDeviceWithConfig<'a, NoopRawMutex, embassy_rp::spi::Spi<'a, SPI0, embassy_rp::spi::Blocking>, Output<'a>>, Output<'a>>, DOGL128_6, GraphicsMode<'a, 128, 8>, 128, 64, 8>) -> Self {
-        Self { display
-        
-        }
-    }
-}
+// struct DisplayStruct <'a>{
+//     pub display: ST7565<SPIInterface<embassy_embedded_hal::shared_bus::blocking::spi::SpiDeviceWithConfig<'a, NoopRawMutex, embassy_rp::spi::Spi<'a, SPI0, embassy_rp::spi::Blocking>, Output<'a>>, Output<'a>>, DOGL128_6, GraphicsMode<'a, 128, 8>, 128, 64, 8>,
+//     reset_pin: Output<'a>,
+//     font: MonoTextStyle<'a, BinaryColor>,
+// }
 
+// impl <'a> DisplayStruct <'a>{
+//     pub fn new(display: ST7565<SPIInterface<embassy_embedded_hal::shared_bus::blocking::spi::SpiDeviceWithConfig<'a, NoopRawMutex, embassy_rp::spi::Spi<'a, SPI0, embassy_rp::spi::Blocking>, Output<'a>>, Output<'a>>, DOGL128_6, GraphicsMode<'a, 128, 8>, 128, 64, 8>,
+//                 reset_pin: Output<'a>, font: MonoTextStyle<'a, BinaryColor>) -> Self {
 
+//         Self { 
+//             display, 
+//             reset_pin,
+//             font,
+//         }
+//     }
+
+//     pub fn set_on(&mut self, on: bool) {
+//         self.display.set_display_on(on).unwrap();
+
+//     }
+// }
 
 #[embassy_executor::main]
 async fn main (_spawner: Spawner) {
@@ -122,7 +130,6 @@ async fn main (_spawner: Spawner) {
     let reset  = p.PIN_28;
     let a0 = p.PIN_27;
 
-    let mut reset = Output::new(reset, Level::Low);
     let a0 = Output::new(a0, Level::Low);   
     let display_config = spi::Config::default();
 
@@ -136,14 +143,19 @@ async fn main (_spawner: Spawner) {
     let mut page_buffer = GraphicsPageBuffer::new();
     let display: ST7565<SPIInterface<embassy_embedded_hal::shared_bus::blocking::spi::SpiDeviceWithConfig<'_, NoopRawMutex, embassy_rp::spi::Spi<'_, SPI0, embassy_rp::spi::Blocking>, Output<'_>>, Output<'_>>, DOGL128_6, GraphicsMode<'_, 128, 8>, 128, 64, 8> = st7565::ST7565::new(display_interface, DOGL128_6)
         .into_graphics_mode(&mut page_buffer);   
+    let reset_pin = Output::new(reset, Level::Low);
+    let font = MonoTextStyle::new(&FONT_10X20, BinaryColor::On);
 
-    let display: DisplayStruct = DisplayStruct::new(display);
+    let mut display: DisplayStruct = DisplayStruct::new(display, reset_pin, font);
+
+    display.set_on(true);
 
 
-    // display.reset(&mut reset, &mut Delay).unwrap();
-    // let _ = display.flush();
+    // display.display.reset(&mut reset, &mut Delay).unwrap();
+    let _ = display.display.flush();
+    display.set_on(true);
     // display.set_display_on(true).unwrap();
-    // let font = MonoTextStyle::new(&FONT_10X20, BinaryColor::On);
+    let font = MonoTextStyle::new(&FONT_10X20, BinaryColor::On);
 
     // let mut i =0; 
         
