@@ -1,3 +1,5 @@
+use heapless::Vec;
+
 #[derive(Copy, Clone)]
 pub struct Stack{
     x: f64,
@@ -5,30 +7,45 @@ pub struct Stack{
     z: f64,
     t: f64,
     changed: bool,
+    // numbers: Vec<f64, 18>,
+    index: usize,
 }
+
+const NUMBERS: &'static [f64] = &[
+    123456789.0,
+    12345678.9,
+    1234567.89,
+    123456.789,
+    12345.6789,
+    1234.56789,
+    123.456789,
+    12.3456789,
+    1.23456789,
+    0.123456789,
+    0.0123456789,
+    0.00123456789,
+    0.000123456789,
+    0.0000123456789,
+    0.00000123456789,
+    0.000000123456789,
+    0.0000000123456789,
+    0.00000000123456789
+];
 
 impl Stack {
     pub fn new()-> Stack{
-        Stack { x: 0.0, y: 0.0, z: 0.0, t: 0.0, changed: false}
+        
+
+        Stack { x: 0.0, y: 0.0, z: 0.0, t: 0.0, changed: false, index: 0}
     }
 
     pub fn test_increment(&mut self){
-        self.x = self.x + 1.0;
-        if self.x>99.0{
-            self.x=0.0;
-            self.y=self.y+1.0;
-            if self.y>99.0{
-                self.y=0.0;
-                self.z=self.z+1.0;
-                if self.z>99.0{
-                    self.z=0.0;
-                    self.t=self.t+1.0;
-                    if self.t>99.0{
-                        self.t=0.0;  
-                    }
-                }
-            }
-        }
+        self.x = NUMBERS[self.index];
+        self.y = 1.0;
+        self.z = 2.0;
+        self.t = 3.0;
+        self.index = (self.index + 1) % NUMBERS.len();
+
     }
 
     pub fn push(&mut self, x: f64) {

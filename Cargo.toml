@@ -40,3 +40,9 @@ embassy-sync = "0.8.0"
 embedded-graphics = "0.8.2"
 embedded-hal = "1.0.0"
 heapless = "0.9.3"
+num-traits = { version = "0.2", default-features = false, features = ["i128"] }
+libm = "0.2.16"
+
+
+# num-traits = "0.2.19"
+# typenum = "1.11.2"

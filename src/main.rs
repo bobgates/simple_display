@@ -137,7 +137,7 @@ async fn main (_spawner: Spawner) {
     let _ = display.display.flush();
     display.set_on(true);
 
-    display.update_stack(&stack);
+    display.update_stack();
 
     //     let num_str: String<20> =  format!("{}", num).unwrap();//Format!("{}".num);
     //     let _ =Text::new(&num_str, Point::new(0, 13), font)
@@ -145,10 +145,10 @@ async fn main (_spawner: Spawner) {
  
     loop{
         // info!("In loop");
-        display.update_stack(&stack);
+        display.update_stack(); 
         stack.swapxy();
         stack.set_changed();
-        delay(1_000_000);
+        delay(100_000_000);
 
     }
 
