@@ -26,6 +26,7 @@ use embassy_rp::gpio::{Level, Output};
 // use embassy_rp::gpio::{Input, Level, Pull};
 use embassy_rp::peripherals::{SPI0};
 // use embassy_rp::{Peri, PeripheralType};
+use embassy_rp::rom_data;
 use embassy_rp::spi;
 use embassy_rp::spi::{Blocking, ClkPin, Config, MisoPin, MosiPin, Spi};
 
@@ -47,7 +48,7 @@ use embedded_graphics::mono_font::ascii::{FONT_7X13, FONT_10X20, FONT_9X18, FONT
 use embedded_graphics::mono_font::MonoTextStyle;
 use embedded_graphics::pixelcolor::BinaryColor;
 
-
+// use rp235x_hal as hal;
 
 use st7565::{GraphicsPageBuffer};
 use st7565::displays::DOGL128_6;
@@ -101,7 +102,7 @@ async fn main (_spawner: Spawner) {
 
 
     let pico_led = Output::new(p.PIN_25, Level::High);
-    let mut flash_led = FlashLedStruct::new(pico_led, 10_000_000);
+    let mut flash_led = FlashLedStruct::new(pico_led, 20_000_000);
     flash_led.flash();
 
 
@@ -127,8 +128,9 @@ async fn main (_spawner: Spawner) {
         .into_graphics_mode(&mut page_buffer);   
     let reset_pin = Output::new(reset, Level::Low);
     let font = MonoTextStyle::new(&FONT_10X20, BinaryColor::On);
+    let stacknames_font = MonoTextStyle::new(&FONT_7X13, BinaryColor::On);
 
-    let mut display: DisplayStruct = DisplayStruct::new(display, reset_pin, font);
+    let mut display: DisplayStruct = DisplayStruct::new(display, reset_pin, font, stacknames_font);
 
     display.set_on(true);
     let mut stack = stack::Stack::new();
@@ -137,7 +139,7 @@ async fn main (_spawner: Spawner) {
     let _ = display.display.flush();
     display.set_on(true);
 
-    display.update_stack();
+    display.update_stack_display();
 
     //     let num_str: String<20> =  format!("{}", num).unwrap();//Format!("{}".num);
     //     let _ =Text::new(&num_str, Point::new(0, 13), font)
@@ -145,7 +147,7 @@ async fn main (_spawner: Spawner) {
  
     loop{
         // info!("In loop");
-        display.update_stack(); 
+        display.update_stack_display(); 
         stack.swapxy();
         stack.set_changed();
         delay(100_000_000);

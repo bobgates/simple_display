@@ -7,6 +7,7 @@ edition = "2024"
 # Cortex-M
 cortex-m = { version = "0.7.7" }
 cortex-m-rt = "0.7.5"
+#rp235x-hal = { version = "0.4.0", features = ["dcp-fast-f64"] } # https://github.com/rp-rs/rp-hal/tree/main/rp235x-hal
 
 # screen driver - my modified local version
 st7565 = { path = "../st7565" }
@@ -28,6 +29,8 @@ embassy-rp = { version = "0.10.0", features = [
   "critical-section-impl",
   "rp235xa",
   "binary-info",
+  "rom-func-cache",
+  "rom-v2-intrinsics",   # Supposed to enable the new rom-v2 intrinsics, but doesn't seem to work yet 
 ] }
 
 
@@ -42,6 +45,7 @@ embedded-hal = "1.0.0"
 heapless = "0.9.3"
 num-traits = { version = "0.2", default-features = false, features = ["i128"] }
 libm = "0.2.16"
+
 
 
 # num-traits = "0.2.19"

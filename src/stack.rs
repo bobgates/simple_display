@@ -11,26 +11,46 @@ pub struct Stack{
     index: usize,
 }
 
-const NUMBERS: &'static [f64] = &[
+const NUMBERS_A: &'static [f64] = &[
     123456789.0,
-    12345678.9,
-    1234567.89,
-    123456.789,
-    12345.6789,
+    // 12345678.9,
+    // 1234567.89,
+    // 123456.789,
+    // 12345.6789,
     1234.56789,
     123.456789,
     12.3456789,
     1.23456789,
     0.123456789,
     0.0123456789,
-    0.00123456789,
-    0.000123456789,
-    0.0000123456789,
-    0.00000123456789,
+    1.00193456789,
+    // 0.000123456789,
+    // 0.0000123456789,
+    // 0.00000123456789,
     0.000000123456789,
-    0.0000000123456789,
-    0.00000000123456789
+    // 0.0000000123456789,
+    // 0.00000000123456789
 ];
+
+const NUMBERS_B: &'static [f64] = &[
+    1000000009.0,
+    // 10000000.9,
+    // 1000000.09,
+    // 100000.009,
+    // 10000.0009,
+    1000.00009,
+    100.000009,
+    10.0000009,
+    1.00000009,
+    0.100000009,
+    0.0100000009,
+    1.00100000009,
+    // 0.000100000009,
+    // 0.0000100000009,
+    // 0.00000100000009,
+    0.010000100000009,
+];
+
 
 impl Stack {
     pub fn new()-> Stack{
@@ -40,11 +60,12 @@ impl Stack {
     }
 
     pub fn test_increment(&mut self){
-        self.x = NUMBERS[self.index];
-        self.y = 1.0;
-        self.z = 2.0;
-        self.t = 3.0;
-        self.index = (self.index + 1) % NUMBERS.len();
+        let delta: f64 = 0.000000000000001;
+        self.x = NUMBERS_A[self.index];
+        self.y = 9.0 as f64 + delta;
+        self.z = 2.0 as f64 + delta;
+        self.t = NUMBERS_B[self.index];
+        self.index = (self.index + 1) % NUMBERS_A.len();
 
     }
 
@@ -100,23 +121,5 @@ impl Stack {
         return self.y;
     }
 
-    // pub fn fetch_strs(&mut self) -> (Vec<u8,64>, &str, &str){
-
-    //     let y_str: Vec<u8,64> = number_to_string(self.y).unwrap().clone();
-    //     // let y = string_to_number(y_str);
-
-    // // let y_str = format!("{:e}", self.y).expect("failed to convert number_to_string ");
-    // // let r = y_str.into_bytes();
-   
-        
-
-    //     (y_str, "0.0", "0.0")
-    // }
-
-
-
-    // pub fn print(&mut self) {
-    //     info!("  Y: {}   Z: {}   T: {}", self.y, self.z, self.t);
-    // }
 
 }
