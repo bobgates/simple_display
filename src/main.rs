@@ -151,7 +151,6 @@ async fn main (_spawner: Spawner) {
         stack.swapxy();
         stack.set_changed();
         delay(100_000_000);
-
     }
 
 }

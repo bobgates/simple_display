@@ -70,7 +70,7 @@ impl <'a> DisplayStruct <'a>{
         display.reset(&mut reset_pin, &mut Delay).unwrap();
 
         let stack = stack::Stack::new();
-        let number_style = DisplayStyle::E(4);
+        let number_style = DisplayStyle::E(5);
 
 
         Self { 
@@ -115,23 +115,32 @@ impl <'a> DisplayStruct <'a>{
                     let exp = exponent - before_dp;
 
                     let n = (number/(10.0_f64).powi(exponent-sf)).trunc()/10_f64.powi(sf-before_dp);
-                    // info!("n {}", n);
-                    info!("output:{} exp{}", n, exp);
+                    info!("n {}", n);
+                    info!("{} \toutput:{} \texp:{} \texponent: {}", number, n, exp, exponent);
 
                     // 1. the cutting off of the number to the correct number of significant figures
                     // Leaves exp
                     // if exp == 0
+
+                    info!("{}E{}", n, exp);
+
+
+
 
 // sf here is the number of significant figures to display, 
 // but it is being interpreted as the number of decimal places 
 // so we need to fix this the number accordingly
 
                     let num_str: String<20> =format!("{:.*}", sf as usize, n).unwrap();
+                    let exp_str: String<20> = format!("{}", exp).unwrap();
                     let mut output: String<20>=format!("").unwrap();
                     let _ = output.push_str(&num_str);
+                    let _ = output.push_str(".");
+                    let _ = output.push_str(&exp_str).unwrap();
 
-                    info!("{}E{}", n, exp);
-                    format!("{}E{}", output, exp).unwrap()
+                    // info!("{}", &output).unwrap();
+                    format!("{}E{}", n, exp).unwrap()
+                    // format!("|{}|", output).unwrap()
                 },
                 DisplayStyle::S(sf) => {
                     format!("Not implemented").unwrap()
@@ -172,20 +181,20 @@ impl <'a> DisplayStruct <'a>{
         let _ = Text::new(":", Point::new(COLON_LEFT, X_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
         let _ = Text::new(&x_buffer_str, Point::new(NUM_LEFT, X_NUM_BOTTOM), self.font).draw(&mut self.display);
 
-        let y_buffer_str = self.num_to_string(y);
-        let _= Text::new("y", Point::new(NAME_LEFT, Y_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
-        let _ = Text::new(":", Point::new(COLON_LEFT, Y_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
-        let _ = Text::new(&y_buffer_str, Point::new(NUM_LEFT, Y_NUM_BOTTOM), self.font).draw(&mut self.display);
+        // let y_buffer_str = self.num_to_string(y);
+        // let _= Text::new("y", Point::new(NAME_LEFT, Y_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
+        // let _ = Text::new(":", Point::new(COLON_LEFT, Y_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
+        // let _ = Text::new(&y_buffer_str, Point::new(NUM_LEFT, Y_NUM_BOTTOM), self.font).draw(&mut self.display);
 
-        let z_buffer_str = self.num_to_string(z,);
-        let _= Text::new("z", Point::new(NAME_LEFT, Z_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
-        let _ = Text::new(":", Point::new(COLON_LEFT, Z_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
-        let _ = Text::new(&z_buffer_str, Point::new(NUM_LEFT, Z_NUM_BOTTOM), self.font).draw(&mut self.display);
+        // let z_buffer_str = self.num_to_string(z,);
+        // let _= Text::new("z", Point::new(NAME_LEFT, Z_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
+        // let _ = Text::new(":", Point::new(COLON_LEFT, Z_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
+        // let _ = Text::new(&z_buffer_str, Point::new(NUM_LEFT, Z_NUM_BOTTOM), self.font).draw(&mut self.display);
 
-        let t_buffer_str = self.num_to_string(t);
-        let _= Text::new("t", Point::new(NAME_LEFT, T_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
-        let _ = Text::new(":", Point::new(COLON_LEFT, T_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
-        let _ = Text::new(&t_buffer_str, Point::new(NUM_LEFT, T_NUM_BOTTOM), self.font).draw(&mut self.display);
+        // let t_buffer_str = self.num_to_string(t);
+        // let _= Text::new("t", Point::new(NAME_LEFT, T_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
+        // let _ = Text::new(":", Point::new(COLON_LEFT, T_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
+        // let _ = Text::new(&t_buffer_str, Point::new(NUM_LEFT, T_NUM_BOTTOM), self.font).draw(&mut self.display);
 
 
         self.display.flush().unwrap();       // Flushes internal buffer to the display
