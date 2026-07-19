@@ -44,7 +44,7 @@ const Y_LABEL_BOTTOM: i32 = X_LABEL_BOTTOM - LINE_SPACING;
 const Z_LABEL_BOTTOM: i32 = X_LABEL_BOTTOM - 2*LINE_SPACING;
 const T_LABEL_BOTTOM: i32 = X_LABEL_BOTTOM - 3*LINE_SPACING;
 
-enum DisplayStyle{
+pub enum DisplayStyle{
     E(i32),
     S(i32),
     FIXED,
@@ -63,14 +63,18 @@ pub struct DisplayStruct <'a>{
 
 impl <'a> DisplayStruct <'a>{
     pub fn new(mut display: ST7565<SPIInterface<embassy_embedded_hal::shared_bus::blocking::spi::SpiDeviceWithConfig<'a, NoopRawMutex, embassy_rp::spi::Spi<'a, SPI0, embassy_rp::spi::Blocking>, Output<'a>>, Output<'a>>, DOGL128_6, GraphicsMode<'a, 128, 8>, 128, 64, 8>,
-                mut reset_pin: Output<'a>, font: MonoTextStyle<'a, BinaryColor>,
-                stack_names_font: MonoTextStyle<'a, BinaryColor>
+                mut reset_pin: Output<'a>, 
+                font: MonoTextStyle<'a, BinaryColor>,
+                stack_names_font: MonoTextStyle<'a, BinaryColor>,
+                number_style: DisplayStyle
             ) -> Self {
         
         display.reset(&mut reset_pin, &mut Delay).unwrap();
 
         let stack = stack::Stack::new();
-        let number_style = DisplayStyle::E(5);
+        // number_style = DisplayStyle::E(5);
+
+                // Give the constructor a number_style
 
 
         Self { 
@@ -81,6 +85,10 @@ impl <'a> DisplayStruct <'a>{
             stack_names_font,
             number_style,
         }
+    }
+
+    pub fn set_number_style(&mut self, number_style : DisplayStyle){
+        self.number_style = number_style;
     }
 
     pub fn num_to_string(&self, number: f64 )->String<20>{
@@ -100,8 +108,6 @@ impl <'a> DisplayStruct <'a>{
             let _ = output.push('0');
             return output;
         } else {
-
-        // let mut n;
             match self.number_style {
                 DisplayStyle::E(sf) => {
                     let exponent: i32 = 1 + libm::log10(number).floor() as i32;
@@ -115,33 +121,49 @@ impl <'a> DisplayStruct <'a>{
                     let exp = exponent - before_dp;
 
                     let n = (number/(10.0_f64).powi(exponent-sf)).trunc()/10_f64.powi(sf-before_dp);
-                    info!("n {}", n);
-                    info!("{} \toutput:{} \texp:{} \texponent: {}", number, n, exp, exponent);
+                    // info!("n {}", n);
+                    // info!("{} \toutput:{} \texp:{} \texponent: {}", number, n, exp, exponent);
 
                     // 1. the cutting off of the number to the correct number of significant figures
                     // Leaves exp
                     // if exp == 0
 
-                    info!("{}E{}", n, exp);
+                    info!("--- {}E{}", n, exp);     // This produces a different string
+                                                    // to the format statement below,
+                                                    // info! gives .0 if there are no non-zero decimals
+                                                    // format just doesn't return no-zero decimals
+                    let mut a: String<20> = format!("{}E{}", n, exp).unwrap();
 
+                    // sf here is the number of significant figures to display, 
+                    // but it is being interpreted as the number of decimal places 
+                    // so we need to fix this the number accordingly
 
+                    // There's an issue that if the number is an exact integer,
+                    // it only has one place after the decimal: a zero. We need to 
+                    // add more zeroes to show the full sig figs.
+                    
+                    // This comes down to subtracting the length of a from sf+1
+                    // and adding that many zeroes
+                    // Example: 
+                    // 100.0
+                    //.  that's character length 5, sf we want is 5,  so (sf+1)-len = 6-5 =
+                    // add one zero.
 
+                     if !a.contains("."){
+                        let p = a.find("E").unwrap(); // must succeed, defined two lines above
+                        // info!("position of E: {}, sf: {} length: {}", p, sf, a.len());
+                        let required = sf+2 - a.len() as i32;
+                        for _i in 0..required {
+                            // info!("-");
+                            a.insert(p,'0').unwrap();
+                        }
+                        a.insert(p, '.').unwrap();
+                    } 
+                    // info!("n {}", n);
+                    // info!("{} \toutput:{} \texp:{} \texponent: {}", number, n, exp, exponent);
 
-// sf here is the number of significant figures to display, 
-// but it is being interpreted as the number of decimal places 
-// so we need to fix this the number accordingly
-
-                    let num_str: String<20> =format!("{:.*}", sf as usize, n).unwrap();
-                    let exp_str: String<20> = format!("{}", exp).unwrap();
-                    let mut output: String<20>=format!("").unwrap();
-                    let _ = output.push_str(&num_str);
-                    let _ = output.push_str(".");
-                    let _ = output.push_str(&exp_str).unwrap();
-
-                    // info!("{}", &output).unwrap();
-                    format!("{}E{}", n, exp).unwrap()
-                    // format!("|{}|", output).unwrap()
-                },
+                    format!("{}", a).unwrap()                    
+                }
                 DisplayStyle::S(sf) => {
                     format!("Not implemented").unwrap()
                 },
@@ -181,25 +203,25 @@ impl <'a> DisplayStruct <'a>{
         let _ = Text::new(":", Point::new(COLON_LEFT, X_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
         let _ = Text::new(&x_buffer_str, Point::new(NUM_LEFT, X_NUM_BOTTOM), self.font).draw(&mut self.display);
 
-        // let y_buffer_str = self.num_to_string(y);
-        // let _= Text::new("y", Point::new(NAME_LEFT, Y_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
-        // let _ = Text::new(":", Point::new(COLON_LEFT, Y_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
-        // let _ = Text::new(&y_buffer_str, Point::new(NUM_LEFT, Y_NUM_BOTTOM), self.font).draw(&mut self.display);
+        let y_buffer_str = self.num_to_string(y);
+        let _= Text::new("y", Point::new(NAME_LEFT, Y_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
+        let _ = Text::new(":", Point::new(COLON_LEFT, Y_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
+        let _ = Text::new(&y_buffer_str, Point::new(NUM_LEFT, Y_NUM_BOTTOM), self.font).draw(&mut self.display);
 
-        // let z_buffer_str = self.num_to_string(z,);
-        // let _= Text::new("z", Point::new(NAME_LEFT, Z_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
-        // let _ = Text::new(":", Point::new(COLON_LEFT, Z_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
-        // let _ = Text::new(&z_buffer_str, Point::new(NUM_LEFT, Z_NUM_BOTTOM), self.font).draw(&mut self.display);
+        let z_buffer_str = self.num_to_string(z,);
+        let _= Text::new("z", Point::new(NAME_LEFT, Z_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
+        let _ = Text::new(":", Point::new(COLON_LEFT, Z_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
+        let _ = Text::new(&z_buffer_str, Point::new(NUM_LEFT, Z_NUM_BOTTOM), self.font).draw(&mut self.display);
 
-        // let t_buffer_str = self.num_to_string(t);
-        // let _= Text::new("t", Point::new(NAME_LEFT, T_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
-        // let _ = Text::new(":", Point::new(COLON_LEFT, T_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
-        // let _ = Text::new(&t_buffer_str, Point::new(NUM_LEFT, T_NUM_BOTTOM), self.font).draw(&mut self.display);
+        let t_buffer_str = self.num_to_string(t);
+        let _= Text::new("t", Point::new(NAME_LEFT, T_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
+        let _ = Text::new(":", Point::new(COLON_LEFT, T_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
+        let _ = Text::new(&t_buffer_str, Point::new(NUM_LEFT, T_NUM_BOTTOM), self.font).draw(&mut self.display);
 
 
         self.display.flush().unwrap();       // Flushes internal buffer to the display
 
-        self.stack.test_increment();
+        // self.stack.test_increment();
 
 
 
