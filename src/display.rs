@@ -221,13 +221,6 @@ impl <'a> DisplayStruct <'a>{
 
         self.display.flush().unwrap();       // Flushes internal buffer to the display
 
-        // self.stack.test_increment();
-
-
-
-
-        // delay(1_000);
-        // info!("looping");
     }
 
 }
