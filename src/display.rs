@@ -91,22 +91,24 @@ impl <'a> DisplayStruct <'a>{
         self.number_style = number_style;
     }
 
-    pub fn num_to_string(&self, number: f64 )->String<20>{
+    pub fn num_to_string(&self, number: f64 )->(String<20>, i32){
         if number == 0.0 {
             let mut output: String<20>=format!("").unwrap();
             let _ = output.push('0');
             let _ = output.push('.');
+            let mut pos=0;
             match self.number_style {
                 DisplayStyle::E(sf) => {
+                    pos = sf+2;
                     for _ in 0..sf {
                         let _ = output.push('0');
                     }
                 },
                 _ => { let _ = output.push('X');}
             }
-            let _ = output.push('E');
+            let _ = output.push('_');
             let _ = output.push('0');
-            return output;
+            return (output,pos);
         } else {
             match self.number_style {
                 DisplayStyle::E(sf) => {
@@ -162,16 +164,16 @@ impl <'a> DisplayStruct <'a>{
                     // info!("n {}", n);
                     // info!("{} \toutput:{} \texp:{} \texponent: {}", number, n, exp, exponent);
 
-                    format!("{}", a).unwrap()                    
+                    (format!("{}", a).unwrap(), 0)                    
                 }
                 DisplayStyle::S(sf) => {
-                    format!("Not implemented").unwrap()
+                    (format!("Not implemented").unwrap(), 0)
                 },
                 DisplayStyle::FIXED => {
-                    format!("Not implemented").unwrap()
+                    (format!("Not implemented").unwrap(), 0)
                 },
                 DisplayStyle::ALL => { 
-                    format!("Not implemented").unwrap()
+                    (format!("Not implemented").unwrap(), 0)
                 }
             }
         }
@@ -198,22 +200,22 @@ impl <'a> DisplayStruct <'a>{
         // info!("x: {}, y: {}, z: {}, t: {}", x, y, z, t);
         let sf: i32 =  3; 
         
-        let x_buffer_str = self.num_to_string(x);
+        let (x_buffer_str, e_pos) = self.num_to_string(x);
         let _= Text::new("x", Point::new(NAME_LEFT, X_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
         let _ = Text::new(":", Point::new(COLON_LEFT, X_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
         let _ = Text::new(&x_buffer_str, Point::new(NUM_LEFT, X_NUM_BOTTOM), self.font).draw(&mut self.display);
 
-        let y_buffer_str = self.num_to_string(y);
+        let (y_buffer_str, epos) = self.num_to_string(y);
         let _= Text::new("y", Point::new(NAME_LEFT, Y_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
         let _ = Text::new(":", Point::new(COLON_LEFT, Y_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
         let _ = Text::new(&y_buffer_str, Point::new(NUM_LEFT, Y_NUM_BOTTOM), self.font).draw(&mut self.display);
 
-        let z_buffer_str = self.num_to_string(z,);
+        let (z_buffer_str , epos)= self.num_to_string(z,);
         let _= Text::new("z", Point::new(NAME_LEFT, Z_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
         let _ = Text::new(":", Point::new(COLON_LEFT, Z_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
         let _ = Text::new(&z_buffer_str, Point::new(NUM_LEFT, Z_NUM_BOTTOM), self.font).draw(&mut self.display);
 
-        let t_buffer_str = self.num_to_string(t);
+        let (t_buffer_str, epos) = self.num_to_string(t);
         let _= Text::new("t", Point::new(NAME_LEFT, T_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
         let _ = Text::new(":", Point::new(COLON_LEFT, T_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
         let _ = Text::new(&t_buffer_str, Point::new(NUM_LEFT, T_NUM_BOTTOM), self.font).draw(&mut self.display);
