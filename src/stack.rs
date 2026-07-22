@@ -60,7 +60,7 @@ const NUMBERS_B: &'static [f64] = &[
 impl Stack {
     pub fn new()-> Stack{
     
-        Stack { x: 0.0, y: 1.0, z: 5.0e20, t: 08e-6, changed: false, index: 0}
+        Stack { x: 6.234567, y: 10e2, z: 5.0e10, t: 08e-6, changed: false, index: 0}
     }
 
     pub fn test_increment(&mut self){

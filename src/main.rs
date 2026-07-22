@@ -134,6 +134,8 @@ async fn main (_spawner: Spawner) {
         .into_graphics_mode(&mut page_buffer);   
     
     let font = MonoTextStyle::new(&FONT_10X20, BinaryColor::On);
+    let e_font = MonoTextStyle::new(&FONT_7X13, BinaryColor::On);
+
     let stacknames_font = MonoTextStyle::new(&FONT_7X13, BinaryColor::On);
     let number_style =  DisplayStyle::E(4);
     let mut display: DisplayStruct =  DisplayStruct::new(
@@ -141,6 +143,7 @@ async fn main (_spawner: Spawner) {
         reset_pin,
         font,
         stacknames_font,
+        e_font,
         number_style
     );
     

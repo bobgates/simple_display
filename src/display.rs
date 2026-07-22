@@ -57,6 +57,7 @@ pub struct DisplayStruct <'a>{
     reset_pin: Output<'a>,
     font: MonoTextStyle<'a, BinaryColor>,
     stack_names_font: MonoTextStyle<'a, BinaryColor>,
+    e_font: MonoTextStyle<'a, BinaryColor>,
     stack: stack::Stack,
     number_style: DisplayStyle,
 }
@@ -66,16 +67,13 @@ impl <'a> DisplayStruct <'a>{
                 mut reset_pin: Output<'a>, 
                 font: MonoTextStyle<'a, BinaryColor>,
                 stack_names_font: MonoTextStyle<'a, BinaryColor>,
+                e_font: MonoTextStyle<'a, BinaryColor>,
                 number_style: DisplayStyle
             ) -> Self {
         
         display.reset(&mut reset_pin, &mut Delay).unwrap();
 
         let stack = stack::Stack::new();
-        // number_style = DisplayStyle::E(5);
-
-                // Give the constructor a number_style
-
 
         Self { 
             display, 
@@ -83,6 +81,7 @@ impl <'a> DisplayStruct <'a>{
             font,
             stack,
             stack_names_font,
+            e_font,
             number_style,
         }
     }
@@ -91,7 +90,7 @@ impl <'a> DisplayStruct <'a>{
         self.number_style = number_style;
     }
 
-    pub fn num_to_string(&self, number: f64 )->(String<20>, i32){
+    pub fn num_to_string(&self, number: f64 )->(String<20>, Option<i32>){
         if number == 0.0 {
             let mut output: String<20>=format!("").unwrap();
             let _ = output.push('0');
@@ -108,7 +107,7 @@ impl <'a> DisplayStruct <'a>{
             }
             let _ = output.push('_');
             let _ = output.push('0');
-            return (output,pos);
+            return (output,Some(pos));
         } else {
             match self.number_style {
                 DisplayStyle::E(sf) => {
@@ -134,7 +133,7 @@ impl <'a> DisplayStruct <'a>{
                                                     // to the format statement below,
                                                     // info! gives .0 if there are no non-zero decimals
                                                     // format just doesn't return no-zero decimals
-                    let mut a: String<20> = format!("{}E{}", n, exp).unwrap();
+                    let mut a: String<20> = String::from(format!("{}E{}", n, exp).unwrap());
 
                     // sf here is the number of significant figures to display, 
                     // but it is being interpreted as the number of decimal places 
@@ -151,8 +150,10 @@ impl <'a> DisplayStruct <'a>{
                     //.  that's character length 5, sf we want is 5,  so (sf+1)-len = 6-5 =
                     // add one zero.
 
-                     if !a.contains("."){
-                        let p = a.find("E").unwrap(); // must succeed, defined two lines above
+                    let p = a.find("E").unwrap(); // must succeed, defined two lines above
+                    info!("Found E at {}",p);
+                        
+                    if !a.contains("."){
                         // info!("position of E: {}, sf: {} length: {}", p, sf, a.len());
                         let required = sf+2 - a.len() as i32;
                         for _i in 0..required {
@@ -161,19 +162,28 @@ impl <'a> DisplayStruct <'a>{
                         }
                         a.insert(p, '.').unwrap();
                     } 
-                    // info!("n {}", n);
-                    // info!("{} \toutput:{} \texp:{} \texponent: {}", number, n, exp, exponent);
 
-                    (format!("{}", a).unwrap(), 0)                    
+                    let mut b: String<20>=String::new();
+                    let mut e_pos: Option<i32> = None;
+                    info!("Contains E");
+                    for (l, c) in a.chars().enumerate(){
+                        if c == 'E' {
+                            b.push(' ').unwrap();
+                            e_pos = Some(l.try_into().unwrap());
+                        } else {
+                                b.push(c).unwrap();
+                        }
+                    }
+                    (b, e_pos)
                 }
                 DisplayStyle::S(sf) => {
-                    (format!("Not implemented").unwrap(), 0)
+                    (format!("Not implemented").unwrap(), None)
                 },
                 DisplayStyle::FIXED => {
-                    (format!("Not implemented").unwrap(), 0)
+                    (format!("Not implemented").unwrap(), None)
                 },
                 DisplayStyle::ALL => { 
-                    (format!("Not implemented").unwrap(), 0)
+                    (format!("Not implemented").unwrap(), None)
                 }
             }
         }
@@ -204,6 +214,10 @@ impl <'a> DisplayStruct <'a>{
         let _= Text::new("x", Point::new(NAME_LEFT, X_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
         let _ = Text::new(":", Point::new(COLON_LEFT, X_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
         let _ = Text::new(&x_buffer_str, Point::new(NUM_LEFT, X_NUM_BOTTOM), self.font).draw(&mut self.display);
+        if e_pos.is_some() {
+            let _ = Text::new("E", Point::new(NUM_LEFT + 10 * e_pos.unwrap() + 2, X_NUM_BOTTOM-2), self.e_font).draw(&mut self.display);
+        }
+
 
         let (y_buffer_str, epos) = self.num_to_string(y);
         let _= Text::new("y", Point::new(NAME_LEFT, Y_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
