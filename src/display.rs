@@ -58,6 +58,7 @@ pub struct DisplayStruct <'a>{
     font: MonoTextStyle<'a, BinaryColor>,
     stack_names_font: MonoTextStyle<'a, BinaryColor>,
     e_font: MonoTextStyle<'a, BinaryColor>,
+    // f_font: MonoTextStyle<'a, BinaryColor>,
     stack: stack::Stack,
     number_style: DisplayStyle,
 }
@@ -68,6 +69,7 @@ impl <'a> DisplayStruct <'a>{
                 font: MonoTextStyle<'a, BinaryColor>,
                 stack_names_font: MonoTextStyle<'a, BinaryColor>,
                 e_font: MonoTextStyle<'a, BinaryColor>,
+                // f_font: MonoTextStyle<'a, BinaryColor>,
                 number_style: DisplayStyle
             ) -> Self {
         
@@ -82,6 +84,7 @@ impl <'a> DisplayStruct <'a>{
             stack,
             stack_names_font,
             e_font,
+            // f_font,
             number_style,
         }
     }
@@ -218,21 +221,29 @@ impl <'a> DisplayStruct <'a>{
             let _ = Text::new("E", Point::new(NUM_LEFT + 10 * e_pos.unwrap() + 2, X_NUM_BOTTOM-2), self.e_font).draw(&mut self.display);
         }
 
-
         let (y_buffer_str, epos) = self.num_to_string(y);
         let _= Text::new("y", Point::new(NAME_LEFT, Y_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
         let _ = Text::new(":", Point::new(COLON_LEFT, Y_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
         let _ = Text::new(&y_buffer_str, Point::new(NUM_LEFT, Y_NUM_BOTTOM), self.font).draw(&mut self.display);
+        if e_pos.is_some() {
+            let _ = Text::new("E", Point::new(NUM_LEFT + 10 * e_pos.unwrap() + 1, Y_NUM_BOTTOM-2), self.e_font).draw(&mut self.display);
+        }
 
         let (z_buffer_str , epos)= self.num_to_string(z,);
         let _= Text::new("z", Point::new(NAME_LEFT, Z_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
         let _ = Text::new(":", Point::new(COLON_LEFT, Z_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
         let _ = Text::new(&z_buffer_str, Point::new(NUM_LEFT, Z_NUM_BOTTOM), self.font).draw(&mut self.display);
+        if e_pos.is_some() {
+            let _ = Text::new("E", Point::new(NUM_LEFT + 10 * e_pos.unwrap() + 2, Z_NUM_BOTTOM-2), self.e_font).draw(&mut self.display);
+        }
 
         let (t_buffer_str, epos) = self.num_to_string(t);
         let _= Text::new("t", Point::new(NAME_LEFT, T_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
         let _ = Text::new(":", Point::new(COLON_LEFT, T_LABEL_BOTTOM), self.stack_names_font).draw(&mut self.display);
         let _ = Text::new(&t_buffer_str, Point::new(NUM_LEFT, T_NUM_BOTTOM), self.font).draw(&mut self.display);
+        if e_pos.is_some() {
+            let _ = Text::new("E", Point::new(NUM_LEFT + 10 * e_pos.unwrap() + 2, T_NUM_BOTTOM-2), self.e_font).draw(&mut self.display);
+        }
 
 
         self.display.flush().unwrap();       // Flushes internal buffer to the display
