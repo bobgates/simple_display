@@ -44,6 +44,16 @@ const Y_LABEL_BOTTOM: i32 = X_LABEL_BOTTOM - LINE_SPACING;
 const Z_LABEL_BOTTOM: i32 = X_LABEL_BOTTOM - 2*LINE_SPACING;
 const T_LABEL_BOTTOM: i32 = X_LABEL_BOTTOM - 3*LINE_SPACING;
 
+// The HP42S has a 131x16 pixel display - two lines by 22 characters. They look something like 1.6x1, height to width
+// The characters are 5 pixels wide and 7 high.
+//
+//The EA DOGL display I have is 128x64, which is slightly narrower and more than twice as high, but
+// I probably won't use that height.
+
+// It is possible to get 2.7" displays in 240x320...
+
+
+
 pub enum DisplayStyle{
     E(i32),
     S(i32),
@@ -132,7 +142,7 @@ impl <'a> DisplayStruct <'a>{
                     // Leaves exp
                     // if exp == 0
 
-                    info!("--- {}E{}", n, exp);     // This produces a different string
+                    // info!("--- {}E{}", n, exp);     // This produces a different string
                                                     // to the format statement below,
                                                     // info! gives .0 if there are no non-zero decimals
                                                     // format just doesn't return no-zero decimals
@@ -154,7 +164,7 @@ impl <'a> DisplayStruct <'a>{
                     // add one zero.
 
                     let p = a.find("E").unwrap(); // must succeed, defined two lines above
-                    info!("Found E at {}",p);
+                    // info!("Found E at {}",p);
                         
                     if !a.contains("."){
                         // info!("position of E: {}, sf: {} length: {}", p, sf, a.len());
@@ -168,7 +178,7 @@ impl <'a> DisplayStruct <'a>{
 
                     let mut b: String<20>=String::new();
                     let mut e_pos: Option<i32> = None;
-                    info!("Contains E");
+                    // info!("Contains E");
                     for (l, c) in a.chars().enumerate(){
                         if c == 'E' {
                             b.push(' ').unwrap();

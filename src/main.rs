@@ -23,8 +23,7 @@ use display_interface_spi::SPIInterface;
 use embassy_embedded_hal::shared_bus::blocking::spi::SpiDeviceWithConfig;
 // use embassy_embedded_hal::shared_bus::SpiDeviceError;
 
-use embassy_rp::gpio::{Level, Output};
-// use embassy_rp::gpio::{Input, Level, Pull};
+use embassy_rp::gpio::{Input, Level, Output, Pull};
 use embassy_rp::peripherals::{SPI0};
 // use embassy_rp::{Peri, PeripheralType};
 use embassy_rp::rom_data;
@@ -56,7 +55,9 @@ use st7565::displays::DOGL128_6;
 use st7565::ST7565;
 use st7565::modes::GraphicsMode;
 
+mod keyboard;
 mod stack;
+use keyboard::Keyboard;
 
 
 
@@ -127,7 +128,7 @@ async fn main (_spawner: Spawner) {
     let mut page_buffer = GraphicsPageBuffer::new();
     let reset_pin = Output::new(reset, Level::Low);
     let font = MonoTextStyle::new(&FONT_10X20, BinaryColor::On);
-    let stacknames_font = MonoTextStyle::new(&FONT_7X13, BinaryColor::On);
+    // let stacknames_font = MonoTextStyle::new(&FONT_7X13, BinaryColor::On);
 
     let mut stack = stack::Stack::new();
     let display: ST7565<SPIInterface<embassy_embedded_hal::shared_bus::blocking::spi::SpiDeviceWithConfig<'_, NoopRawMutex, embassy_rp::spi::Spi<'_, SPI0, embassy_rp::spi::Blocking>, Output<'_>>, Output<'_>>, DOGL128_6, GraphicsMode<'_, 128, 8>, 128, 64, 8> = st7565::ST7565::new(display_interface, DOGL128_6)
@@ -136,6 +137,8 @@ async fn main (_spawner: Spawner) {
     let font = MonoTextStyle::new(&FONT_10X20, BinaryColor::On);
     let e_font = MonoTextStyle::new(&FONT_7X13, BinaryColor::On);
     // let f_font = MonoTextStyle::new(&FONT_9X18, BinaryColor::On);
+
+
 
 
     let stacknames_font = MonoTextStyle::new(&FONT_7X13, BinaryColor::On);
@@ -149,28 +152,49 @@ async fn main (_spawner: Spawner) {
         number_style
     );
     
-
-
-
-
     display.set_on(true);
-
-    // display.display.reset(&mut reset, &mut Delay).unwrap();
     let _ = display.display.flush();
     display.set_on(true);
-
     display.update_stack_display();
 
-    //     let num_str: String<20> =  format!("{}", num).unwrap();//Format!("{}".num);
-    //     let _ =Text::new(&num_str, Point::new(0, 13), font)
-    //             .draw(&mut display);
- 
+    // Keyboard pins
+    let row1 = Input::new(p.PIN_2, Pull::Down);
+    let row2 = Input::new(p.PIN_3, Pull::Down);
+    let row3 = Input::new(p.PIN_4, Pull::Down);
+    let row4 = Input::new(p.PIN_5, Pull::Down);
+    let row5 = Input::new(p.PIN_6, Pull::Down);
+    let row6 = Input::new(p.PIN_7, Pull::Down);
+    let row7 = Input::new(p.PIN_8, Pull::Down);
+    let row8 = Input::new(p.PIN_9, Pull::Down);
+
+    let col1 = Output::new(p.PIN_10, Level::Low); 
+    let col2 = Output::new(p.PIN_11, Level::Low);
+    let col3 = Output::new(p.PIN_12, Level::Low);
+    let col4 = Output::new(p.PIN_13, Level::Low);
+    let col5 = Output::new(p.PIN_14, Level::Low);
+    let col6 = Output::new(p.PIN_15, Level::Low);
+
+    let rows = [row1, row2, row3, row4, row5, row6, row7, row8];
+    let cols = [col1, col2, col3, col4, col5, col6];
+
+
+
+
+    let mut keyboard = Keyboard::new(rows, cols);
+
+    
     loop{
         // info!("In loop");
         display.update_stack_display(); 
         stack.swapxy();
         stack.set_changed();
-        delay(100_000_000);
+        let key = keyboard.scan();
+        let k =  key.await;
+        if k.is_some(){
+            info!("{} key pressed", k.unwrap());
+        }
+        
+        delay(10_000_000);
     }
 
 }
